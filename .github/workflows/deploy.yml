@@ -1,0 +1,34 @@
+name: 自动部署
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Hugo
+        uses: peaceiris/actions-hugo@v3    # 这里从 v2 改成了 v3
+        with:
+          hugo-version: '0.131.0'
+          extended: true
+
+      - name: 生成网站
+        run: hugo --minify
+
+      - name: 推送到 public 仓库
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        run: |
+          cd public
+          git init
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "自动部署 $(date -u +'%Y-%m-%d %H:%M:%S') UTC"
+          git remote add origin https://x-access-token:${DEPLOY_TOKEN}@github.com/Jerryx6218/Jerryx6218.github.io.git
+          git push -f origin HEAD:main
